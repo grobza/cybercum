@@ -5,21 +5,9 @@ import (
     "time"
     "log"
     "strconv"
-    "flag"
 )
 
-func cybercum() {
-    read := flag.Bool("read", false, "read")
-    flag.Parse()
-
-    if *read {
-        readBot("./config.json")
-    } else {
-        runBot("./config.json")
-    }
-}
-
-func readBot(cfgFile string) {
+func ReadBot(cfgFile string) {
     log.Println("starting...")
     bot := tgbot.NewBot(cfgFile)
     log.Println("reading...")
@@ -29,7 +17,7 @@ func readBot(cfgFile string) {
     log.Println("done...")
 }
 
-func runBot(cfgFile string) {
+func RunBot(cfgFile string) {
     log.Println("starting...")
     bot := tgbot.NewBot(cfgFile)
     c := make(chan int)
