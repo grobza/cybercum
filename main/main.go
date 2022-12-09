@@ -6,22 +6,30 @@ import (
 	"github.com/dyvdev/cybercum/utils"
 	"log"
 	"math/rand"
+	"os"
 	"time"
 )
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
-	//cum.ReadBot("./config.json")
-	cum.RunBot("./config.json")
+	//cum.ReadBot()
+	cum.RunBot()
 	//test()
-	//testChat()
+	//testChatHistoryGen()
 }
 
-func testChat() {
+func testChatHistoryGen() {
 	sw := &swatter.DataStorage{}
-	data := utils.GetTgData("don.json")
+	data := utils.GetTgData("tghistory.json")
+	file, err := os.Create("tghistory.txt")
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	defer file.Close()
 	for _, str := range data {
 		sw.ParseText(str)
+		file.WriteString(str)
 	}
 	log.Print(sw.GenerateText("", 15))
 }

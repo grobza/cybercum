@@ -1,12 +1,23 @@
-add config.json:
-{
-    "BotId": "",
-    "Ratio": 50,
-    "Length": 50,
-    "EnableSemen": true,
-    "EnablePhrases": false,
-    "MainCum": "",
-    "DefaultPhrases": [""]
-}
-
-go run main/main.go
+#	Для запуска нужен config.json:
+айди бота(получаем у botfather):  
+`"BotId": ""`  
+бот пишет сообщения каждые "Ratio" сообещений в чате  
+`"Ratio": 50`  
+примерная длина максимального сообщения  
+`"Length": 50`  
+включить генерацию случайных сообщений  
+`"EnableSemen": true`  
+включить случайный набор фраз  
+`"EnablePhrases": false`  
+набор случайных фраз  
+`"DefaultPhrases": []`  
+первый кум, на команды которого бот реагирует. Кум может добавлять новых кумов  
+`"MainCum": ""`  
+название текстового файла, из которого бот возьмет базовые знания. Можно не указывать  
+`"DefaultDataFileName": ""`  
+набор фраз по умолчанию:  
+`"DefaultPhrases": [""]`  
+#	chats.json  
+После того, как бот будет добавлен в чат, конфиг чата добавится в `chats.json`
+#	Запуск:  
+`go run main/main.go`  

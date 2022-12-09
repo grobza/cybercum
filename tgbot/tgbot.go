@@ -13,14 +13,38 @@ import (
 	"time"
 )
 
+const (
+	/*
+		список команд для ОтцаБотов:
+		add_cum - добавить кума
+		enable_semen - включить генерацию сообщений(да/нет)
+		enable_phrases - включить фиксированные фразы(да/нет)
+		phrase - добавить фразу(через пробел после команды, вернёт номер фразы)
+		phrase_remove - убрать фразу по номеру
+		ratio - частота сообщений(50 значит, что бот будет писать раз в 50 сообщений)
+		length - длина сгенерированных сообщений
+	*/
+	commandAddCum        = "add_cum"
+	commandEnableSemen   = "enable_semen"
+	commandEnablePhrases = "enable_phrases"
+	commandFixed         = "phrase"
+	commandFixedRemove   = "phrase_remove"
+	commandRatio         = "ratio"
+	commandLength        = "length"
+
+	maxLength = 100
+	nefren    = "CAACAgIAAx0CTK3KYQACAQNjDKmYViPp5K-PWxuUKUDpwg0vQQAC9hEAAqx6iEqOhkQYAe2vbSkE"
+)
+
 type Config struct {
-	BotId          string
-	Ratio          int // количество сообщений между ответами бота
-	Length         int // длина сообщений генератора цепей
-	EnableSemen    bool
-	EnablePhrases  bool
-	MainCum        string // мой ник
-	DefaultPhrases []string
+	BotId               string   // айди бота от ОтцаБОтов
+	Ratio               int      // количество сообщений между ответами бота
+	Length              int      // длина сообщений генератора цепей
+	EnableSemen         bool     // включить генерацию фраз
+	EnablePhrases       bool     //включить фиксированные фразы
+	MainCum             string   // ник владельца
+	DefaultPhrases      []string // список фраз
+	DefaultDataFileName string   // текстовый файл из которого берутся базовые данные
 }
 type Chat struct {
 	ChatName       string
@@ -44,28 +68,6 @@ type Bot struct {
 	Swatter map[int64]*swatter.DataStorage
 }
 
-const (
-	/*
-	   add_cum - добавить кума
-	   enable_semen - включить цепи
-	   enable_phrases - включить фразы(они приоритетнее)
-	   phrase - добавить фразу
-	   phrase_remove - убрать фразу(надо передать её номер)
-	   ratio - частота сообщений(50 значит, что бот будет писать раз в 50 сообщений)
-	   length - длина цепных сообщений
-	*/
-	commandAddCum        = "add_cum"
-	commandEnableSemen   = "enable_semen"
-	commandEnablePhrases = "enable_phrases"
-	commandFixed         = "phrase"
-	commandFixedRemove   = "phrase_remove"
-	commandRatio         = "ratio"
-	commandLength        = "length"
-
-	maxLength = 100
-	nefren    = "CAACAgIAAx0CTK3KYQACAQNjDKmYViPp5K-PWxuUKUDpwg0vQQAC9hEAAqx6iEqOhkQYAe2vbSkE"
-)
-
 func NewBot() *Bot {
 	bot := Bot{}
 	bot.LoadConfig()
@@ -81,6 +83,7 @@ func NewBot() *Bot {
 	}
 	bot.BotApi = bapi
 	bot.Swatter = map[int64]*swatter.DataStorage{}
+	bot.Chats = map[int64]*Chat{}
 	bot.LoadDump()
 	bot.Pause = 15 * time.Second
 	bot.Timer = time.Now().UTC().Add(bot.Pause)
@@ -118,8 +121,11 @@ func (bot *Bot) CheckChatSettings(update tgbotapi.Update) {
 			FixedPhrases:   bot.Cfg.DefaultPhrases,
 			Cums:           []string{bot.Cfg.MainCum},
 		}
-		bot.Swatter[update.FromChat().ID] = &swatter.DataStorage{}
-		//bot.Swatter[update.FromChat().ID].ReadFile("mh.txt")
+		var err error
+		bot.Swatter[update.FromChat().ID], err = swatter.NewFromTextFile(bot.Cfg.DefaultDataFileName)
+		if err != nil {
+			log.Fatal("Eror creating new swatter ", err)
+		}
 		bot.SaveDump()
 	}
 	bot.Chats[update.FromChat().ID].ChatName = update.FromChat().Title
@@ -342,7 +348,11 @@ func (bot *Bot) LoadDump() {
 	log.Println("reading chats...")
 	content, err := os.ReadFile("chats.json")
 	if err != nil {
-		bot.Chats = map[int64]*Chat{}
+		cfgJson, _ := json.Marshal(bot.Chats)
+		err := os.WriteFile("chats.json", cfgJson, 0644)
+		if err != nil {
+			log.Fatal("Error during saving chats: ", err)
+		}
 		log.Println("Error when opening file: ", err)
 		return
 	}
@@ -355,8 +365,10 @@ func (bot *Bot) LoadDump() {
 	for key, chat := range bot.Chats {
 		bot.Swatter[key], err = swatter.NewFromDump(chat.ChatName + ".blob")
 		if err != nil {
-			bot.Swatter[key] = &swatter.DataStorage{}
-			//bot.Swatter[key].ReadFile("mh.txt")
+			bot.Swatter[key], err = swatter.NewFromTextFile(bot.Cfg.DefaultDataFileName)
+			if err != nil {
+				log.Fatal("Error creating new swatter ", err)
+			}
 			needToSave = true
 		}
 	}

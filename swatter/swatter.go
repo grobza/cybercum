@@ -14,12 +14,6 @@ import (
 type Trigram [3]string
 type DataStorage map[string]map[string]map[string]int
 
-func NewData() *DataStorage {
-	var data DataStorage
-	data = make(map[string]map[string]map[string]int)
-	return &data
-}
-
 func ComposeTrigram(trigramMap DataStorage, msg string) Trigram {
 	msg = strings.ToLower(regexp.MustCompile(`\.|,|;|!|\?`).ReplaceAllString(msg, ""))
 	words := strings.Split(msg, " ")
@@ -164,21 +158,26 @@ func (data DataStorage) ParseText(text string) {
 	}
 }
 
-func (data DataStorage) ReadFile(filename string) {
+func (data DataStorage) ReadFile(filename string) error {
+	if filename == "" {
+		return nil
+	}
 	f, err := os.Open(filename)
 	if err != nil {
-		log.Fatal(err)
-		return
+		log.Println(err)
+		return err
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 	for scanner.Scan() {
 		s := scanner.Text()
 		data.ParseText(s)
 	}
+	return err
 }
 func (data DataStorage) SaveDump(filename string) {
 	file, err := os.Create(filename)
@@ -208,8 +207,13 @@ func (data DataStorage) LoadDump(filename string) error {
 	}
 	return nil
 }
+
 func NewFromDump(filename string) (*DataStorage, error) {
-	s := NewData()
-	err := s.LoadDump(filename)
-	return s, err
+	data := DataStorage{}
+	return &data, data.LoadDump(filename)
+}
+
+func NewFromTextFile(filename string) (*DataStorage, error) {
+	data := DataStorage{}
+	return &data, data.ReadFile(filename)
 }

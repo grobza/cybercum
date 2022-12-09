@@ -16,7 +16,7 @@ func ReadBot(cfgFile string) {
 	log.Println("done...")
 }
 
-func RunBot(cfgFile string) {
+func RunBot() {
 	log.Println("starting...")
 	bot := tgbot.NewBot()
 	c := make(chan int)
