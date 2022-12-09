@@ -1,11 +1,12 @@
 add config.json:
 {
-    "FileName":"config.json",
-    "BotId":"",
-    "BotName":"",
-    "SaveFile":"savefile.blob",
-    "Ratio":500,
-    "Length":3
+    "BotId": "",
+    "Ratio": 50,
+    "Length": 50,
+    "EnableSemen": true,
+    "EnablePhrases": false,
+    "MainCum": "",
+    "DefaultPhrases": [""]
 }
 
 go run main/main.go

@@ -10,7 +10,7 @@ func ReadBot(cfgFile string) {
 	log.Println("starting...")
 	bot := tgbot.NewBot()
 	log.Println("reading...")
-	bot.Semen.ReadFile("reading")
+	//bot.Swatter.ReadFile("mh.txt")
 	log.Println("saving...")
 	bot.SaveDump()
 	log.Println("done...")
