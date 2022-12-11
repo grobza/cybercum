@@ -119,7 +119,7 @@ func (bot *Bot) CheckChatSettings(update tgbotapi.Update) {
 			Cums:           []string{bot.Cfg.MainCum},
 		}
 		bot.Swatter[update.FromChat().ID] = &swatter.DataStorage{}
-		//bot.Swatter[update.FromChat().ID].ReadFile("mh.txt")
+		bot.Swatter[update.FromChat().ID].ReadFile("mh.txt")
 		bot.SaveDump()
 	}
 	bot.Chats[update.FromChat().ID].ChatName = update.FromChat().Title
@@ -204,14 +204,9 @@ func (bot *Bot) ShowUpdateInfo(update tgbotapi.Update) {
 
 func (bot *Bot) GenerateMessage(message *tgbotapi.Message) tgbotapi.Chattable {
 	msg := bot.Swatter[message.Chat.ID].GenerateText(message.Text, bot.Chats[message.Chat.ID].SemenLength)
-	threadId := 0
-	if message.Chat.IsForum && message.MessageThreadID != 0 {
-		threadId = message.MessageThreadID
-	}
 	return tgbotapi.MessageConfig{
 		BaseChat: tgbotapi.BaseChat{
 			ChatID:           message.Chat.ID,
-			MessageThreadID:  threadId,
 			ReplyToMessageID: 0,
 		},
 		Text:                  msg,
@@ -254,14 +249,9 @@ func (bot *Bot) ReplyNefren(message *tgbotapi.Message) {
 func (bot *Bot) SendFixedPhrase(message *tgbotapi.Message) {
 	chat := bot.Chats[message.Chat.ID]
 	if len(chat.FixedPhrases) != 0 {
-		threadId := 0
-		if message.Chat.IsForum && message.MessageThreadID != 0 {
-			threadId = message.MessageThreadID
-		}
 		bot.SendMessage(tgbotapi.MessageConfig{
 			BaseChat: tgbotapi.BaseChat{
 				ChatID:           message.Chat.ID,
-				MessageThreadID:  threadId,
 				ReplyToMessageID: 0,
 			},
 			Text:                  chat.FixedPhrases[rand.Intn(len(chat.FixedPhrases)-1)],
@@ -356,7 +346,7 @@ func (bot *Bot) LoadDump() {
 		bot.Swatter[key], err = swatter.NewFromDump(chat.ChatName + ".blob")
 		if err != nil {
 			bot.Swatter[key] = &swatter.DataStorage{}
-			//bot.Swatter[key].ReadFile("mh.txt")
+			bot.Swatter[key].ReadFile("mh.txt")
 			needToSave = true
 		}
 	}
