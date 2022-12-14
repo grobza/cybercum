@@ -34,6 +34,7 @@ const (
 
 	maxLength = 100
 	nefren    = "CAACAgIAAx0CTK3KYQACAQNjDKmYViPp5K-PWxuUKUDpwg0vQQAC9hEAAqx6iEqOhkQYAe2vbSkE"
+	dumpTick  = time.Hour
 )
 
 type Config struct {
@@ -90,21 +91,28 @@ func NewBot() *Bot {
 	return &bot
 }
 
-func (bot *Bot) Update() {
+func (bot *Bot) Update(done <-chan bool) {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.BotApi.GetUpdatesChan(u)
-	for update := range updates {
-		bot.ShowUpdateInfo(update)
-		if update.Message != nil && update.Message.Text != "" {
-			bot.CheckChatSettings(update)
-			if update.Message.IsCommand() {
-				bot.Commands(update)
-			} else {
-				bot.ProcessMessage(update)
+	go func() {
+		for update := range updates {
+			select {
+			case <-done:
+				return
+			default:
+			}
+			bot.ShowUpdateInfo(update)
+			if update.Message != nil && update.Message.Text != "" {
+				bot.CheckChatSettings(update)
+				if update.Message.IsCommand() {
+					bot.Commands(update)
+				} else {
+					bot.ProcessMessage(update)
+				}
 			}
 		}
-	}
+	}()
 }
 
 func (bot *Bot) CheckChatSettings(update tgbotapi.Update) {
@@ -444,5 +452,27 @@ func (bot *Bot) Commands(update tgbotapi.Update) {
 			//bot.Reply("не понял" + update.Message.Command(), update.Message)
 			log.Println(update.Message.Command())
 		}
+	}
+}
+
+func (bot *Bot) Dumper(done <-chan bool) {
+	ticker := time.NewTicker(dumpTick)
+	go func() {
+		for {
+			select {
+			case <-done:
+				bot.BotApi.StopReceivingUpdates()
+				return
+			case <-ticker.C:
+				bot.SaveDump()
+			default:
+			}
+		}
+	}()
+}
+
+func (bot *Bot) Clean() {
+	for key, _ := range bot.Chats {
+		bot.Swatter[key].Clean()
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -154,7 +155,9 @@ func (data DataStorage) ParseText(text string) {
 		last = word
 	}
 	for i := 0; i < len(trimmedWords)-2; i++ {
-		data.AddTrigram(Trigram{trimmedWords[i], trimmedWords[i+1], trimmedWords[i+2]})
+		if trimmedWords[i] != trimmedWords[i+2] {
+			data.AddTrigram(Trigram{trimmedWords[i], trimmedWords[i+1], trimmedWords[i+2]})
+		}
 	}
 }
 
@@ -216,4 +219,31 @@ func NewFromDump(filename string) (*DataStorage, error) {
 func NewFromTextFile(filename string) (*DataStorage, error) {
 	data := DataStorage{}
 	return &data, data.ReadFile(filename)
+}
+
+func (data DataStorage) Clean() {
+	counter1 := 0
+	counter2 := 0
+	for word1 := range data {
+		for word2 := range data[word1] {
+			var str []string
+			for word3 := range data[word1][word2] {
+				if word1 == word3 {
+					str = append(str, word3)
+					counter2++
+				}
+				counter1++
+			}
+			for _, s := range str {
+				delete(data[word1][word2], s)
+			}
+			if len(data[word1][word2]) == 0 {
+				delete(data[word1], word2)
+				if len(data[word1]) == 0 {
+					delete(data, word1)
+				}
+			}
+		}
+	}
+	log.Println(strconv.Itoa(counter1) + " " + strconv.Itoa(counter2))
 }

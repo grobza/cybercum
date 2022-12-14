@@ -14,6 +14,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	//cum.ReadBot()
 	cum.RunBot()
+	//cum.CleanBot()
 	//test()
 	//testChatHistoryGen()
 }

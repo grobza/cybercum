@@ -3,7 +3,9 @@ package cybercum
 import (
 	"github.com/dyvdev/cybercum/tgbot"
 	"log"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func ReadBot(cfgFile string) {
@@ -16,20 +18,20 @@ func ReadBot(cfgFile string) {
 	log.Println("done...")
 }
 
-func RunBot() {
-	log.Println("starting...")
+func CleanBot() {
 	bot := tgbot.NewBot()
-	c := make(chan int)
-	go saver(c, bot)
-	bot.Update()
-	i := <-c
-	log.Println("exit ", i)
+	bot.Clean()
+	bot.SaveDump()
 }
 
-func saver(c chan int, bot *tgbot.Bot) {
-	for {
-		time.Sleep(60 * 60 * time.Second)
-		bot.SaveDump()
-	}
-	c <- 1
+func RunBot() {
+	log.Println("starting...")
+	done := make(chan bool)
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc, syscall.SIGTERM)
+	bot := tgbot.NewBot()
+	bot.Update(done)
+	bot.Dumper(done)
+	<-sigc
+	done <- true
 }
