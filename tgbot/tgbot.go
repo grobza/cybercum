@@ -459,6 +459,7 @@ func (bot *Bot) Dumper(done <-chan bool) {
 	ticker := time.NewTicker(dumpTick)
 	go func() {
 		for {
+			//time.Sleep(25 * time.Millisecond)
 			select {
 			case <-done:
 				bot.BotApi.StopReceivingUpdates()
