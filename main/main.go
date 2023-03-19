@@ -44,9 +44,6 @@ func ChatHistoryGen(historyFile string) {
 	defer file.Close()
 	for _, str := range data {
 		newStr := sw.ParseText(str)
-		if strings.Contains(str, "порядке") {
-			str = str + " "
-		}
 		if newStr == "" {
 			continue
 		}
