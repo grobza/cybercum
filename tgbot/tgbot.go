@@ -2,15 +2,16 @@ package tgbot
 
 import (
 	"encoding/json"
-	"github.com/dyvdev/cybercum/swatter"
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
 	"math/rand"
-	"modernc.org/mathutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dyvdev/cybercum/swatter"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"modernc.org/mathutil"
 )
 
 const (
@@ -186,7 +187,8 @@ func (bot *Bot) IsCum(message *tgbotapi.Message) bool {
 		ChatConfigWithUser: tgbotapi.ChatConfigWithUser{
 			ChatID:             message.Chat.ID,
 			SuperGroupUsername: "",
-			UserID:             message.From.ID},
+			UserID:             message.From.ID,
+		},
 	})
 	if err == nil {
 		chat := bot.Chats[message.Chat.ID]
@@ -218,14 +220,14 @@ func (bot *Bot) ShowUpdateInfo(update tgbotapi.Update) {
 
 func (bot *Bot) GenerateMessage(message *tgbotapi.Message) tgbotapi.Chattable {
 	msg := bot.Swatter[message.Chat.ID].GenerateText(message.Text, bot.Chats[message.Chat.ID].SemenLength)
-	threadId := 0
-	if message.Chat.IsForum && message.MessageThreadID != 0 {
-		threadId = message.MessageThreadID
-	}
+	//threadId := 0
+	//if message.Chat.IsForum && message.MessageThreadID != 0 {
+	//	threadId = message.MessageThreadID
+	//}
 	return tgbotapi.MessageConfig{
 		BaseChat: tgbotapi.BaseChat{
-			ChatID:           message.Chat.ID,
-			MessageThreadID:  threadId,
+			ChatID: message.Chat.ID,
+			//MessageThreadID:  threadId,
 			ReplyToMessageID: 0,
 		},
 		Text:                  msg,
@@ -268,14 +270,14 @@ func (bot *Bot) ReplyNefren(message *tgbotapi.Message) {
 func (bot *Bot) SendFixedPhrase(message *tgbotapi.Message) {
 	chat := bot.Chats[message.Chat.ID]
 	if len(chat.FixedPhrases) != 0 {
-		threadId := 0
-		if message.Chat.IsForum && message.MessageThreadID != 0 {
-			threadId = message.MessageThreadID
-		}
+		//threadId := 0
+		//if message.Chat.IsForum && message.MessageThreadID != 0 {
+		//	threadId = message.MessageThreadID
+		//}
 		bot.SendMessage(tgbotapi.MessageConfig{
 			BaseChat: tgbotapi.BaseChat{
-				ChatID:           message.Chat.ID,
-				MessageThreadID:  threadId,
+				ChatID: message.Chat.ID,
+				//MessageThreadID:  threadId,
 				ReplyToMessageID: 0,
 			},
 			Text:                  chat.FixedPhrases[rand.Intn(len(chat.FixedPhrases)-1)],
@@ -352,6 +354,19 @@ func (bot *Bot) SaveDump() {
 	}
 }
 
+func (bot *Bot) SaveDumpFromTextFile(filepath string) {
+	cfgJson, _ := json.Marshal(bot.Chats)
+	err := os.WriteFile("chats.json", cfgJson, 0644)
+	if err != nil {
+		log.Fatal("Error during saving chats: ", err)
+	}
+
+	for key, chat := range bot.Chats {
+		bot.Swatter[key].ReadFile(filepath)
+		bot.Swatter[key].SaveDump(chat.ChatName + ".blob")
+	}
+}
+
 func (bot *Bot) LoadDump() {
 	log.Println("reading chats...")
 	content, err := os.ReadFile("chats.json")
@@ -383,7 +398,6 @@ func (bot *Bot) LoadDump() {
 	if needToSave {
 		bot.SaveDump()
 	}
-	//bot.FixChats()
 	log.Println("reading chats...done")
 }
 
@@ -459,14 +473,12 @@ func (bot *Bot) Dumper(done <-chan bool) {
 	ticker := time.NewTicker(dumpTick)
 	go func() {
 		for {
-			//time.Sleep(25 * time.Millisecond)
 			select {
 			case <-done:
 				bot.BotApi.StopReceivingUpdates()
 				return
 			case <-ticker.C:
 				bot.SaveDump()
-			default:
 			}
 		}
 	}()

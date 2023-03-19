@@ -3,13 +3,14 @@ package swatter
 import (
 	"bufio"
 	"encoding/gob"
-	"github.com/dyvdev/cybercum/utils"
 	"log"
 	"math/rand"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/dyvdev/cybercum/utils"
 )
 
 type Trigram [3]string
@@ -139,11 +140,36 @@ func (data DataStorage) GenerateText(msg string, length int) string {
 			last2Words[1] = trigram[2]
 		}
 	}
+	for i := range text {
+		text[i] = cleanWord(text[i])
+
+	}
 	return strings.Join(text, " ")
 }
 
-func (data DataStorage) ParseText(text string) {
-	text = strings.ToLower(regexp.MustCompile(`\.|,|;|!|\?`).ReplaceAllString(text, ""))
+func cleanWord(word string) string {
+	if len(word) < 2 {
+		return ""
+	}
+	word = utils.TrimWord(word)
+	if word[0] == '"' && word[len(word)-1] != '"' {
+		word = strings.ReplaceAll(word, "\"", "")
+	}
+	if word[0] == '\'' && word[len(word)-1] != '\'' {
+		word = strings.ReplaceAll(word, "'", "")
+	}
+	word = strings.Trim(word, "\"\\n\\")
+	return word
+}
+
+func (data DataStorage) ParseText(text string) string {
+	text = strings.ToLower(regexp.MustCompile(`\.|,|;|!|\?|\t`).ReplaceAllString(text, ""))
+	text = strings.ToLower(regexp.MustCompile(`[^a-zA-Zа-яА-Я\s\d]`).ReplaceAllString(text, ""))
+	text = strings.ToLower(regexp.MustCompile(`\n{2,}`).ReplaceAllString(text, "\n"))
+	text = strings.ToLower(regexp.MustCompile(" {2,}").ReplaceAllString(text, " "))
+	text = strings.ToLower(regexp.MustCompile(" {2,}").ReplaceAllString(text, " "))
+	text = strings.TrimSpace(text)
+
 	words := strings.Split(text, " ")
 	var trimmedWords []string
 	last := ""
@@ -159,6 +185,7 @@ func (data DataStorage) ParseText(text string) {
 			data.AddTrigram(Trigram{trimmedWords[i], trimmedWords[i+1], trimmedWords[i+2]})
 		}
 	}
+	return text
 }
 
 func (data DataStorage) ReadFile(filename string) error {
@@ -199,13 +226,11 @@ func (data DataStorage) SaveDump(filename string) {
 func (data DataStorage) LoadDump(filename string) error {
 	f, err := os.Open(filename)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
 	defer f.Close()
 	dec := gob.NewDecoder(f)
 	if err := dec.Decode(&data); err != nil {
-		log.Fatal(err)
 		return err
 	}
 	return nil
