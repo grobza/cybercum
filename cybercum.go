@@ -1,22 +1,13 @@
 package cybercum
 
 import (
-	"github.com/dyvdev/cybercum/tgbot"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
-)
 
-func ReadBot(cfgFile string) {
-	log.Println("starting...")
-	bot := tgbot.NewBot()
-	log.Println("reading...")
-	//bot.Swatter.ReadFile("mh.txt")
-	log.Println("saving...")
-	bot.SaveDump()
-	log.Println("done...")
-}
+	"github.com/dyvdev/cybercum/tgbot"
+)
 
 func CleanBot() {
 	bot := tgbot.NewBot()
